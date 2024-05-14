@@ -7,7 +7,7 @@ function App() {
   return (
     <Routes>
       <Route element={<Navbar />}>
-        <Route path="/" element={<Navigate to={"/exploration"} />} />
+        <Route path="/" element={<Navigate to={"/explorations"} />} />
         <Route path="/explorations">
           <Route index element={<Exploration />} />
         </Route>
