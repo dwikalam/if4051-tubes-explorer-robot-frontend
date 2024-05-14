@@ -1,17 +1,17 @@
 import { Container } from "react-bootstrap";
 import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { IExplorationsRetDTO } from "../feature/exploration/model/Exploration";
+import { IExplorationByIdRetDto, IExplorationsRetDto } from "../feature/exploration/model/Exploration";
 import { ExplorationRepository } from "../feature/exploration/exploration";
 import { Loading } from "../core/Loading";
 import { generateArray } from "../helper/Iterable";
 
 const Exploration = () => {
-    const [explorations, setExplorations] = useState<IExplorationsRetDTO[]>([]);
+    const [explorations, setExplorations] = useState<IExplorationByIdRetDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const [searchParams] = useSearchParams();
-    const [maxPage, setMaxPage] = useState(5);
+    const [maxPage, setMaxPage] = useState(1);
 
     const currentPage = searchParams.get("page");
     const currentPageNum = currentPage ? parseInt(currentPage) : 1;
@@ -25,8 +25,8 @@ const Exploration = () => {
         setIsLoading(true);
         ExplorationRepository.getInstance()
             .getAllExplorations()
-            .then((res) => {
-                // setExplorations(res.data.explorationsData);
+            .then((res: IExplorationsRetDto) => {
+                setExplorations(res.explorationsData);
                 // setMaxPage(res.data.countPages);
             })
             .finally(() => {
@@ -61,7 +61,7 @@ const Exploration = () => {
                                     </td>
                                     <td>
                                         <div className="d-flex justify-content-start align-items-center gap-2">
-                                            <p className="mb-0">{exploration.explorationsData.name}</p>
+                                            <p className="mb-0">{exploration.name}</p>
                                         </div>
                                     </td>
                                     <td>
@@ -82,7 +82,7 @@ const Exploration = () => {
                     <li
                         className={`page-item ${currentPageNum === 1 ? "disabled" : null}`}
                     >
-                        <Link to={`/user?page=${currentPageNum - 1}`} className="page-link">
+                        <Link to={`/explorations?page=${currentPageNum - 1}`} className="page-link">
                         Previous
                         </Link>
                     </li>
@@ -92,18 +92,16 @@ const Exploration = () => {
                             className={`page-item ${item === currentPageNum ? "active" : ""}`}
                             key={item}
                         >
-                        <Link to={`/user?page=${item}`} className="page-link">
+                        <Link to={`/explorations?page=${item}`} className="page-link">
                             {item}
                         </Link>
                         </li>
                     ))}
 
                     <li
-                        className={`page-item ${
-                        currentPageNum === maxPage ? "disabled" : null
-                        }`}
+                        className={`page-item ${currentPageNum === maxPage ? "disabled" : null}`}
                     >
-                        <Link to={`/user?page=${currentPageNum + 1}`} className="page-link">
+                        <Link to={`/explorations?page=${currentPageNum + 1}`} className="page-link">
                             Next
                         </Link>
                     </li>

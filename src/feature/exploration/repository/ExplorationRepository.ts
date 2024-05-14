@@ -1,12 +1,13 @@
 import { HttpClient } from "../../httpClient";
-import { ResponseType } from "../../response";
-import { IExplorationsRetDTO } from "../exploration";
+import { IExplorationsRetDto } from "../exploration";
 
 export class ExplorationRepository extends HttpClient {
     private static repoInstance? : ExplorationRepository;
 
     private constructor() {
-        super(import.meta.env.VITE_SERVER_URL);
+        super(`${import.meta.env.VITE_SERVER_URL}/exploration`);
+
+        console.log(`${import.meta.env.VITE_SERVER_URL}/exploration`);
     }
 
     public static getInstance() {
@@ -18,7 +19,7 @@ export class ExplorationRepository extends HttpClient {
     }
 
     public getAllExplorations = async () => {
-        const data = await this.instance.get<ResponseType<IExplorationsRetDTO>>('exploration');
+        const data = await this.instance.get<IExplorationsRetDto>('/');
         
         return data;
     }

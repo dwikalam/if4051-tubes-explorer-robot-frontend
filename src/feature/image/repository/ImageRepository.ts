@@ -1,12 +1,11 @@
 import { HttpClient } from "../../httpClient";
-import { ResponseType } from "../../response";
 import { IImagesRetDTO } from "../image";
 
 export class ImageRepository extends HttpClient {
     private static repoInstance? : ImageRepository;
 
     private constructor() {
-        super(import.meta.env.VITE_SERVER_URL);
+        super(`${import.meta.env.VITE_SERVER_URL}/image`);
     }
 
     public static getInstance() {
@@ -18,7 +17,7 @@ export class ImageRepository extends HttpClient {
     }
 
     public getAllImages = async () => {
-        const data = await this.instance.get<ResponseType<IImagesRetDTO>>('image');
+        const data = await this.instance.get<IImagesRetDTO>('/');
         
         return data;
     }
