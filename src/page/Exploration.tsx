@@ -42,22 +42,22 @@ const Exploration = () => {
                 <>
                 {explorations.length === 0 ? (
                     <div className="d-flex justify-content-center">
-                    <h5>Belum ada eksplorasi yang dilakukan</h5>
+                    <h5>No exploration has been made.</h5>
                     </div>
                 ) : (
                     <table className="table table-hover">
                         <thead>
                             <tr>
                                 <th scope="col">No</th>
-                                <th scope="col">Eksplorasi</th>
-                                <th scope="col">Tanggal</th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             {explorations.map((exploration, idx) => (
                                 <tr>
                                     <td scope="row">
-                                        {idx}
+                                        {idx + 1}
                                     </td>
                                     <td>
                                         <div className="d-flex justify-content-start align-items-center gap-2">

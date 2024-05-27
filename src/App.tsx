@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./layout/Navbar";
-import Controller from "./page/Controller";
 import Exploration from "./page/Exploration";
 import Videostream from "./page/Videostream";
 
@@ -11,9 +10,6 @@ function App() {
         <Route path="/" element={<Navigate to={"/explorations"} />} />
         <Route path="/explorations">
           <Route index element={<Exploration />} />
-        </Route>
-        <Route path="/controller">
-          <Route index element={<Controller />} />
         </Route>
         <Route path="/stream">
           <Route index element={<Videostream />} />
