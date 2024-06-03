@@ -2,10 +2,10 @@ import mqtt, { IClientOptions, MqttClient } from 'mqtt';
 import { useEffect, useRef, useState } from 'react';
 
 const Videostream = () => {
-    const socket = useRef<WebSocket | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [imageBlob, setImageBlob] = useState(null);
-    const worker = useRef<Worker | null>(null); // Reference to Web Worker
+    const [imageBlob, setImageBlob] = useState<any|null>(null);
+    const [imageBlobDet, setImageBlobDet] = useState<any|null>(null); // Image Blob for object detection
+
+    const [isConnected, setIsConnected] = useState(false);
 
     const client = useRef<MqttClient | null>(null);
     const [irValue, setIrValue] = useState<string | null>(null);
@@ -13,74 +13,38 @@ const Videostream = () => {
     const [humidValue, setHumidValue] = useState<string | null>(null);
     const [gasValue, setGasValue] = useState<string | null>(null);
 
-    useEffect(() => {
-        // Create a new instance of the Web Worker
-        worker.current = new Worker('imageWorker.js');
+    useEffect(()=> {
+        console.log("IS CONNECTED", isConnected)
+    },[isConnected])
+
+
+    function randomString(length: number) {
+        let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+      
+        for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+      
+        return result;
+      }
+
+    function generateRandomClientId() {
+        return 'mqtt_iyoti_' + randomString(10);
+      }
+
+    const options = {
+        protocol: 'mqtt',
+        host: '192.168.1.109',
+        port: 9001,
+        clientId: generateRandomClientId(),
     
-        // Clean up worker on component unmount
-        return () => {
-            if (worker.current) {
-                worker.current.terminate();
-            }
-        };
-    }, []);
+    };
 
 
     useEffect(() => {
-        socket.current = new WebSocket(`${import.meta.env.VITE_WS_URL}`);
-  
-        socket.current.onopen = () => {
-            console.log('WebSocket connection opened');
-        };
+        // client.current = mqtt.Client();
 
-        // Handle WebSocket messages
-        socket.current.onmessage = (event) => {
-            const newMessage = event.data;
-            // convert the blob to an image
-            setImageBlob(newMessage);
-        };
-
-        // Handle WebSocket errors
-        socket.current.onerror = (error: Event | ErrorEvent ) => {
-            console.error('WebSocket error:', error);
-        };
-
-        // Handle WebSocket connection closed
-        socket.current.onclose = () => {
-            console.log('WebSocket connection closed');
-        };
-
-        // Clean up WebSocket connection on component unmount
-        return () => {
-            if (socket.current !== null) {
-                socket.current.close();
-            }
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!imageBlob) return;
-      
-        const handleMessage = (event:any) => {
-            const detectedObjects = event.data;
-            drawBoundingBoxes(detectedObjects.result, detectedObjects.image);
-        };
-      
-        // Send image data to the Web Worker for object detection
-        worker.current?.postMessage(imageBlob);
-      
-        // Listen for messages from the Web Worker
-        worker.current?.addEventListener('message', handleMessage);
-      
-        // Clean up Web Worker message handler
-        return () => {
-            worker.current?.removeEventListener('message', handleMessage);
-            console.log("unmounting")
-        };
-    }, [imageBlob]);
-
-    useEffect(() => {
-        client.current = mqtt.connect(`wss://<SERVER-ADDRESS>:443/mqtt`);
+        client.current = mqtt.connect(options as IClientOptions);
+        console.log("CLIENT", client.current)
 
         client.current.on('connect', () => {
             console.log('Connected');
@@ -116,6 +80,16 @@ const Videostream = () => {
 
                 case '/explorobot/gas':
                     setGasValue(messageStr);
+                    break;
+                
+                case 'streaming/send':
+                    const blob = new Blob([message], { type: 'image/jpeg' }); 
+                    setImageBlob(blob);
+                    break;
+
+                case 'streaming/receive':
+                    const blobObj = new Blob([message], { type: 'image/jpeg' }); 
+                    setImageBlobDet(blobObj);
                     break;
 
                 default:
@@ -158,41 +132,19 @@ const Videostream = () => {
         };
     }, []);
 
-    // Function to draw bounding boxes on the video feed
-    function drawBoundingBoxes(objects: any, imageData: any) {
-        // Draw each detected object as a bounding box
-        // remove the application/octet-stream;base64, from the image data and changeit to data:image/jpeg;base64,
-        let imageNew = imageData.replace(/^data:application\/octet-stream;base64,/, 'data:image/jpeg;base64,');
-
-        const canvas = canvasRef.current!.getContext('2d');
-
-        if (!canvas) return;
-
-        const img = new Image();
-        img.src = imageNew;
-
-        img.onload = () => {
-            canvas.clearRect(0, 0, 640, 480);
-            canvas.drawImage(img, 0, 0, 640, 480);
-        };
-        
-        objects.forEach(function(object:any) {
-            var box = object.box;
-            canvas.beginPath();
-            canvas.rect(box[0], box[1], box[2] - box[0], box[3] - box[1]);
-            canvas.lineWidth = 1;
-            canvas.strokeStyle = 'red';
-            canvas.fillStyle = 'red';
-            canvas.stroke();
-            canvas.font = '16px Arial';
-            canvas.fillText(object.class, box[0], box[1] - 5);
-        });
-    }
-
     const sendMessage = (message: string) => {
-        if (socket.current!.readyState === WebSocket.OPEN) {
-            socket.current!.send(message);
+        if (client.current === null || client.current.disconnected) {
+            return;
         }
+        if (message="s") {
+            setImageBlob(null)
+        }
+        client.current.publish('streaming/control', message, (error?: Error) => {
+            if (error) {
+              console.log('Publish error: ', error);
+              return;
+            }
+        });
     }
 
     const subscribeToAllTopics = () => {
@@ -231,6 +183,22 @@ const Videostream = () => {
                 return;
             }
         });
+
+        client.current.subscribe('streaming/send', (err: Error | null) => {
+            if (err) {
+                console.error(`Error on subscribing "streaming/send" topic`, err);
+                
+                return;
+            }
+        });
+
+        client.current.subscribe('streaming/receive', (err: Error | null) => {
+            if (err) {
+                console.error(`Error on subscribing "streaming/receive" topic`, err);
+                
+                return;
+            }
+        });
     }
 
     const publishControlTopic = (keyInput: 'forward' | 'backward' | 'left' | 'right' | 'stop') => {
@@ -257,7 +225,7 @@ const Videostream = () => {
                             <div>
                                 <div className="d-flex justify-content-center">
                                     <img src={URL.createObjectURL(imageBlob)} alt="Blob Image" />
-                                </div>
+                                </div> 
                                 <div>
                                     <div>IR: {irValue ? irValue : '-'}</div>
                                     <div>Temperature: {tempValue ? tempValue : '-'}</div>
@@ -274,9 +242,13 @@ const Videostream = () => {
 
                     <div className="d-flex flex-column align-items-center">
                         <h1>Object Detection</h1>
-                        <div>
-                            <canvas id="canvas" style={{border: "solid"}} ref={canvasRef} width="640" height="480"></canvas>
-                        </div>
+                        {imageBlobDet && (
+                            <div>
+                                <div className="d-flex justify-content-center">
+                                    <img src={URL.createObjectURL(imageBlobDet)} alt="Blob Image" />
+                                </div> 
+                            </div>
+                        )}
                     </div>
                 </section>
 
