@@ -1,5 +1,5 @@
 import { HttpClient } from "../../httpClient";
-import { IExplorationsRetDto } from "../exploration";
+import { ICreateExplorationArgDto, ICreateExplorationRetDto, IExplorationsRetDto } from "../exploration";
 
 export class ExplorationRepository extends HttpClient {
     private static repoInstance?: ExplorationRepository;
@@ -18,6 +18,12 @@ export class ExplorationRepository extends HttpClient {
 
     public getAllExplorations = async () => {
         const data = await this.instance.get<IExplorationsRetDto>('/');
+        
+        return data;
+    }
+
+    public createExploration = async (dto: ICreateExplorationArgDto) => {
+        const data = await this.instance.post<ICreateExplorationRetDto>('/', dto);
         
         return data;
     }

@@ -1,11 +1,16 @@
 import mqtt, { IClientOptions, MqttClient } from 'mqtt';
 import { useEffect, useRef, useState } from 'react';
+import { ExplorationRepository, ICreateExplorationArgDto } from '../feature/exploration/exploration';
+import { StreamRepository } from '../feature/stream/repository/StreamRepository';
+import { IPostObjectDetectionArgDto } from '../feature/stream/model/VideoStream';
+import { Button, Form, Modal } from 'react-bootstrap';
 
 const Videostream = () => {
+    const [explorationName, setExplorationName] = useState<string|null>(null);
+    const [explorationId, setExplorationId] = useState<string|null>(null);
+
     const [imageBlob, setImageBlob] = useState<any|null>(null);
     const [imageBlobDet, setImageBlobDet] = useState<any|null>(null); // Image Blob for object detection
-
-    const [isConnected, setIsConnected] = useState(false);
 
     const client = useRef<MqttClient | null>(null);
     const [irValue, setIrValue] = useState<string | null>(null);
@@ -13,38 +18,32 @@ const Videostream = () => {
     const [humidValue, setHumidValue] = useState<string | null>(null);
     const [gasValue, setGasValue] = useState<string | null>(null);
 
-    useEffect(()=> {
-        console.log("IS CONNECTED", isConnected)
-    },[isConnected])
-
-
-    function randomString(length: number) {
-        let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        let result = '';
-      
-        for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
-      
-        return result;
-      }
-
-    function generateRandomClientId() {
-        return 'mqtt_iyoti_' + randomString(10);
-      }
-
-    const options = {
-        protocol: 'mqtt',
-        host: '192.168.1.109',
-        port: 9001,
-        clientId: generateRandomClientId(),
-    
-    };
-
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
-        // client.current = mqtt.Client();
+        if (explorationName === null) {
+            return;
+        }
 
+        const createExplorationArg: ICreateExplorationArgDto = {
+            name: explorationName
+        };
+
+        ExplorationRepository.getInstance()
+            .createExploration(createExplorationArg)
+            .then((res) => {
+                setExplorationId(res.explorationId);
+            })
+            .catch((err) => {
+                alert("Exploration failed to be created. The page will be reloaded.");
+                window.location.reload();
+            });
+    }, [explorationName]);
+
+    useEffect(() => {
         client.current = mqtt.connect(options as IClientOptions);
-        console.log("CLIENT", client.current)
+
+        console.log("CLIENT ", client.current)
 
         client.current.on('connect', () => {
             console.log('Connected');
@@ -90,6 +89,26 @@ const Videostream = () => {
                 case 'streaming/receive':
                     const blobObj = new Blob([message], { type: 'image/jpeg' }); 
                     setImageBlobDet(blobObj);
+
+                    if (explorationId === null) {
+                        break;
+                    }
+
+                    const postObjectDetectionArg: IPostObjectDetectionArgDto = {
+                        exploration_id: explorationId,
+                        image_blob: message.toString('base64'),
+                    }
+
+                    StreamRepository.getInstance()
+                        .postObjectDetection(postObjectDetectionArg)
+                        .then(() => {
+                            console.log(`Object detection was successfully posted.`);
+                        })
+                        .catch((err) => {
+                            alert("Object detection was failed to be posted. The page will be reloaded.");
+                            window.location.reload();
+                        });
+
                     break;
 
                 default:
@@ -131,6 +150,26 @@ const Videostream = () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, []);
+
+    function randomString(length: number) {
+        let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+        
+        for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+        
+        return result;
+    }
+
+    function generateRandomClientId() {
+        return 'mqtt_iyoti_' + randomString(10);
+    }
+
+    const options = {
+        protocol: 'mqtt',
+        host: '192.168.1.109',
+        port: 9001,
+        clientId: generateRandomClientId(),
+    };
 
     const sendMessage = (message: string) => {
         if (client.current === null || client.current.disconnected) {
@@ -201,6 +240,27 @@ const Videostream = () => {
         });
     }
 
+    const handleStartClick = () => {
+        setShowModal(true);
+    };
+
+    const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const inputName = formData.get('explorationName') as string;
+
+        setExplorationName(inputName);
+        
+        setShowModal(false);
+
+        sendMessage("p");
+    };
+
+    const handleStopClick = () => {
+        sendMessage("s");
+        setImageBlob(null);
+    };
+
     const publishControlTopic = (keyInput: 'forward' | 'backward' | 'left' | 'right' | 'stop') => {
         if (client.current === null || client.current.disconnected) {
             return;
@@ -227,16 +287,16 @@ const Videostream = () => {
                                     <img src={URL.createObjectURL(imageBlob)} alt="Blob Image" />
                                 </div> 
                                 <div>
-                                    <div>IR: {irValue ? irValue : '-'}</div>
-                                    <div>Temperature: {tempValue ? tempValue : '-'}</div>
-                                    <div>Humidity: {humidValue ? humidValue : '-'}</div>
-                                    <div>Gas: {gasValue ? gasValue : '-'}</div>
+                                    <div>IR: {irValue === null ? irValue : '-'}</div>
+                                    <div>Temperature: {tempValue === null  ? tempValue : '-'}</div>
+                                    <div>Humidity: {humidValue === null ? humidValue : '-'}</div>
+                                    <div>Gas: {gasValue === null ? gasValue : '-'}</div>
                                 </div>
                             </div>
                         )}
                         <div className="d-flex justify-content-center">
-                            <button onClick={() => sendMessage("p")}>Start</button>
-                            <button onClick={() => {sendMessage("s"); setImageBlob(null)}}>Stop</button>
+                            <button onClick={handleStartClick}>Start</button>
+                            <button onClick={handleStopClick}>Stop</button>
                         </div>
                     </div>
 
@@ -264,6 +324,23 @@ const Videostream = () => {
                         </div>
                     </div>
                 </section>
+
+                <Modal show={showModal} onHide={() => setShowModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Robot Exploration</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form onSubmit={handleFormSubmit}>
+                            <Form.Group controlId="formName">
+                                <Form.Label>Name</Form.Label>
+                                <Form.Control type="text" name="explorationName" required />
+                            </Form.Group>
+                            <Button variant="primary" type="submit">
+                                Submit
+                            </Button>
+                        </Form>
+                    </Modal.Body>
+                </Modal>
             </div>
         </div>
     );
