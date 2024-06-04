@@ -312,8 +312,8 @@ const Videostream = () => {
                                         <div>Gas</div>
                                         <div
                                             style={{ 
-                                                color: gasValue !== null ? 'red' : 'inherit', 
-                                                fontWeight: gasValue !== null ? 'bold' : 'normal' 
+                                                color: gasValue !== null && parseInt(gasValue) === 1 ? 'red' : 'inherit', 
+                                                fontWeight: gasValue !== null && parseInt(gasValue) === 1 ? 'bold' : 'normal' 
                                             }}
                                         >
                                             {gasValue !== null ? gasValue : '-'}
