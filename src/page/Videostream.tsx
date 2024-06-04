@@ -43,8 +43,6 @@ const Videostream = () => {
     useEffect(() => {
         client.current = mqtt.connect(options as IClientOptions);
 
-        console.log("CLIENT ", client.current)
-
         client.current.on('connect', () => {
             console.log('Connected');
 
@@ -279,49 +277,65 @@ const Videostream = () => {
         <div className="container py-2">
             <div className="row">
                 <section className="col">
-                    <div className="d-flex flex-column">
+                    <div className="d-flex flex-column gap-3">
                         <h1 className="d-flex justify-content-center">Live Video Stream</h1>
+                        <div className="d-flex justify-content-center gap-2">
+                            <Button variant="primary" onClick={handleStartClick}>Start</Button>
+                            <Button variant="danger" onClick={handleStopClick}>Stop</Button>
+                        </div>
                         {imageBlob && (
-                            <div>
+                            <div className="d-flex flex-column align-items-center gap-3">
                                 <div className="d-flex justify-content-center">
                                     <img src={URL.createObjectURL(imageBlob)} alt="Blob Image" />
                                 </div> 
                                 <div>
-                                    <div>IR: {irValue === null ? irValue : '-'}</div>
-                                    <div>Temperature: {tempValue === null  ? tempValue : '-'}</div>
-                                    <div>Humidity: {humidValue === null ? humidValue : '-'}</div>
-                                    <div>Gas: {gasValue === null ? gasValue : '-'}</div>
+                                    <div className='d-flex justify-content-between gap-5'>
+                                        <div>IR</div>
+                                        <div>{irValue !== null ? irValue : '-'}</div>
+                                    </div>
+                                    <div className='d-flex justify-content-between gap-5'>
+                                        <div>Temperature</div>
+                                        <div>{tempValue !== null ? tempValue : '-'}</div>
+                                    </div>
+                                    <div className='d-flex justify-content-between gap-5'>
+                                        <div>Humidity</div>
+                                        <div>{humidValue !== null ? humidValue : '-'}</div>
+                                    </div>
+                                    <div className='d-flex justify-content-between gap-5'>
+                                        <div>Gas</div>
+                                        <div>{gasValue !== null ? gasValue : '-'}</div>
+                                    </div>
                                 </div>
                             </div>
                         )}
-                        <div className="d-flex justify-content-center">
-                            <button onClick={handleStartClick}>Start</button>
-                            <button onClick={handleStopClick}>Stop</button>
-                        </div>
                     </div>
 
-                    <div className="d-flex flex-column align-items-center">
-                        <h1>Object Detection</h1>
-                        {imageBlobDet && (
-                            <div>
-                                <div className="d-flex justify-content-center">
-                                    <img src={URL.createObjectURL(imageBlobDet)} alt="Blob Image" />
-                                </div> 
-                            </div>
-                        )}
+                    <div className="d-flex flex-column align-items-center gap-3 mt-3">
+                        <h1>Controller</h1>
+                        <div className='d-flex gap-2'>
+                            <Button variant={"secondary"} onClick={() => publishControlTopic('forward')}>Forward</Button>
+                            <Button variant={"secondary"} onClick={() => publishControlTopic('backward')}>Backward</Button>
+                            <Button variant={"secondary"} onClick={() => publishControlTopic('left')}>Left</Button>
+                            <Button variant={"secondary"} onClick={() => publishControlTopic('right')}>Right</Button>
+                            <Button variant={"secondary"} onClick={() => publishControlTopic('stop')}>Stop</Button>
+                        </div>
                     </div>
                 </section>
 
                 <section className="col">
-                    <div className="d-flex flex-column align-items-center">
-                        <h1>Controller</h1>
-                        <div>
-                            <button onClick={() => publishControlTopic('forward')}>Forward</button>
-                            <button onClick={() => publishControlTopic('backward')}>Backward</button>
-                            <button onClick={() => publishControlTopic('left')}>Left</button>
-                            <button onClick={() => publishControlTopic('right')}>Right</button>
-                            <button onClick={() => publishControlTopic('stop')}>Stop</button>
+                    <div className="d-flex flex-column align-items-center gap-3">
+                        <h1>Object Detection</h1>
+                        <div className="d-flex justify-content-center gap-2" style={{ visibility: 'hidden' }}>
+                            <Button variant="primary">Start</Button>
+                            <Button variant="danger">Stop</Button>
                         </div>
+                        {imageBlobDet && (
+                            <div>
+                                <div className="d-flex justify-content-center">
+                                    <img src={URL.createObjectURL(imageBlobDet)} alt="Blob Image Detection" />
+                                </div> 
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -335,8 +349,8 @@ const Videostream = () => {
                                 <Form.Label>Name</Form.Label>
                                 <Form.Control type="text" name="explorationName" required />
                             </Form.Group>
-                            <Button variant="primary" type="submit">
-                                Submit
+                            <Button variant="primary" type="submit" className='mt-3'>
+                                Create
                             </Button>
                         </Form>
                     </Modal.Body>
