@@ -32,6 +32,8 @@ const ExplorationDetail = () => {
             .getObjectDetection(getObjectDetectionArgDto)
             .then((res) => {
                 setAllObjectDetections(res.explorationsImage);
+
+                console.log(res.explorationsImage[0].image_blob);
             })
             .catch((err) => {
                 alert("Detected objects failed to be retrieved. Redirecting to /explorations.");
@@ -56,7 +58,9 @@ const ExplorationDetail = () => {
                     <table className="table">
                         <thead>
                             <tr>
-                                <th scope="col">{explorationName}</th>
+                                <th scope="col" className="d-flex justify-content-center">
+                                    <h1>{explorationName}</h1>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -64,7 +68,7 @@ const ExplorationDetail = () => {
                                 <tr key={idx}>
                                     <td>
                                         <div className="d-flex justify-content-center">
-                                            <img src={objectDetection.image_blob} alt="Blob Image Detection" />
+                                            <img src={`data:image/jpeg;base64, ${objectDetection.image_blob}`} alt="Blob Image Detection" />
                                         </div> 
                                     </td>
                                 </tr>
