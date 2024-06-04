@@ -11,6 +11,8 @@ const Videostream = () => {
 
     const [imageBlob, setImageBlob] = useState<any|null>(null);
     const [imageBlobDet, setImageBlobDet] = useState<any|null>(null); // Image Blob for object detection
+    const [imageBlobDetBase64, setImageBlobDetBase64] = useState<any|null>(null); // Image Blob for object detection
+    const [oldImageBlobDetBase64, setOldImageBlobDetBase64] = useState<any|null>(null); 
 
     const client = useRef<MqttClient | null>(null);
     const [irValue, setIrValue] = useState<string | null>(null);
@@ -95,24 +97,10 @@ const Videostream = () => {
                     const blobObj = new Blob([message], { type: 'image/jpeg' }); 
                     setImageBlobDet(blobObj);
 
-                    if (explorationId === null) {
-                        break;
-                    }
-
-                    const postObjectDetectionArg: IPostObjectDetectionArgDto = {
-                        exploration_id: explorationId,
-                        image_blob: message.toString('base64'),
-                    }
-
-                    StreamRepository.getInstance()
-                        .postObjectDetection(postObjectDetectionArg)
-                        .then(() => {
-                            console.log(`Object detection was successfully posted.`);
-                        })
-                        .catch((err) => {
-                            alert("Object detection was failed to be posted. The page will be reloaded.");
-                            window.location.reload();
-                        });
+                    (async () => {
+                        const base64Image = await blobToBase64(blobObj);
+                        setImageBlobDetBase64(base64Image);
+                    })();
 
                     break;
 
@@ -125,6 +113,35 @@ const Videostream = () => {
             client.current?.end();
         };
     }, []);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (explorationId === null || imageBlobDetBase64 === oldImageBlobDetBase64) {
+                return;
+            }
+
+            const postObjectDetectionArg: IPostObjectDetectionArgDto = {
+                exploration_id: explorationId,
+                image_blob: imageBlobDetBase64,
+            }
+
+            StreamRepository.getInstance()
+                .postObjectDetection(postObjectDetectionArg)
+                .then(() => {
+                    console.log(`Object detection was successfully posted.`);
+
+                    setOldImageBlobDetBase64(postObjectDetectionArg.image_blob);
+                })
+                .catch((err) => {
+                    alert("Object detection was failed to be posted. The page will be reloaded.");
+                    window.location.reload();
+                });
+        }, 10000); // in ms
+    
+        return () => {
+            clearInterval(intervalId);
+        }
+      }, []);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -272,6 +289,20 @@ const Videostream = () => {
             }
         });
     }
+
+    const blobToBase64 = (blob: Blob): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.readAsDataURL(blob);
+
+            reader.onloadend = () => {
+                resolve(reader.result as string);
+            };
+
+            reader.onerror = reject;
+        });
+    };
 
     return (
         <div className="container py-2">
