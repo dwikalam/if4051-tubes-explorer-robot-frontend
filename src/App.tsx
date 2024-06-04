@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./layout/Navbar";
 import Exploration from "./page/Exploration";
 import Videostream from "./page/Videostream";
+import ExplorationDetail from "./page/ExplorationDetail";
 
 function App() {
   return (
@@ -10,6 +11,9 @@ function App() {
         <Route path="/" element={<Navigate to={"/explorations"} />} />
         <Route path="/explorations">
           <Route index element={<Exploration />} />
+          <Route path=":id">
+              <Route index element={<ExplorationDetail />} />
+            </Route>
         </Route>
         <Route path="/stream">
           <Route index element={<Videostream />} />

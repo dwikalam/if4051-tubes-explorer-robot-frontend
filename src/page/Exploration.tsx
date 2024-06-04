@@ -50,23 +50,21 @@ const Exploration = () => {
                             <tr>
                                 <th scope="col">No</th>
                                 <th scope="col">Title</th>
-                                <th scope="col">Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             {explorations.map((exploration, idx) => (
-                                <tr>
+                                <tr 
+                                    key={idx} 
+                                    onClick={() => { window.location.href = `/explorations/${exploration.id}?name=${exploration.name}`; }}
+                                    style={{ cursor: "pointer" }}
+                                >
                                     <td scope="row">
                                         {idx + 1}
                                     </td>
                                     <td>
                                         <div className="d-flex justify-content-start align-items-center gap-2">
                                             <p className="mb-0">{exploration.name}</p>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="d-flex justify-content-start align-items-center gap-2">
-                                            <p className="mb-0">{"2024-01-01"}</p>
                                         </div>
                                     </td>
                                 </tr>

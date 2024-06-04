@@ -1,5 +1,5 @@
 import { HttpClient } from "../../httpClient";
-import { IPostObjectDetectionArgDto, IPostObjectDetectionRetDto } from "../model/VideoStream";
+import { IGetObjectDetectionArgDto, IGetObjectDetectionRetDto, IPostObjectDetectionArgDto, IPostObjectDetectionRetDto } from "../model/VideoStream";
 
 export class StreamRepository extends HttpClient {
     private static repoInstance?: StreamRepository;
@@ -14,6 +14,12 @@ export class StreamRepository extends HttpClient {
         }
     
         return this.repoInstance;
+    }
+
+    public getObjectDetection = async (dto: IGetObjectDetectionArgDto) => {
+        const data = await this.instance.get<IGetObjectDetectionRetDto>(`/?exploration_id=${dto.exploration_id}`);
+        
+        return data;
     }
 
     public postObjectDetection = async (dto: IPostObjectDetectionArgDto) => {

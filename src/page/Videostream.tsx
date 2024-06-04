@@ -20,6 +20,13 @@ const Videostream = () => {
 
     const [showModal, setShowModal] = useState(false);
 
+    const options = {
+        protocol: 'mqtt',
+        host: '192.168.1.109',
+        port: 9001,
+        clientId: generateRandomClientId(),
+    };
+
     useEffect(() => {
         if (explorationName === null) {
             return;
@@ -161,13 +168,6 @@ const Videostream = () => {
     function generateRandomClientId() {
         return 'mqtt_iyoti_' + randomString(10);
     }
-
-    const options = {
-        protocol: 'mqtt',
-        host: '192.168.1.109',
-        port: 9001,
-        clientId: generateRandomClientId(),
-    };
 
     const sendMessage = (message: string) => {
         if (client.current === null || client.current.disconnected) {
