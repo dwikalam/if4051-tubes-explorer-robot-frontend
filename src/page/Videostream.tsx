@@ -295,7 +295,14 @@ const Videostream = () => {
                                     </div>
                                     <div className='d-flex justify-content-between gap-5'>
                                         <div>Temperature</div>
-                                        <div>{tempValue !== null ? tempValue : '-'}</div>
+                                        <div
+                                            style={{ 
+                                                color: (tempValue !== null && parseInt(tempValue) > 50) ? 'red' : 'inherit', 
+                                                fontWeight: (tempValue !== null && parseInt(tempValue) > 50) ? 'bold' : 'normal' 
+                                            }}
+                                        >
+                                            {tempValue !== null ? tempValue : '-'}
+                                        </div>
                                     </div>
                                     <div className='d-flex justify-content-between gap-5'>
                                         <div>Humidity</div>
@@ -303,7 +310,14 @@ const Videostream = () => {
                                     </div>
                                     <div className='d-flex justify-content-between gap-5'>
                                         <div>Gas</div>
-                                        <div>{gasValue !== null ? gasValue : '-'}</div>
+                                        <div
+                                            style={{ 
+                                                color: gasValue !== null ? 'red' : 'inherit', 
+                                                fontWeight: gasValue !== null ? 'bold' : 'normal' 
+                                            }}
+                                        >
+                                            {gasValue !== null ? gasValue : '-'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
