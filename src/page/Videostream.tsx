@@ -27,6 +27,8 @@ const Videostream = () => {
         host: `${import.meta.env.VITE_BROKER_HOST}`,
         port: parseInt(`${import.meta.env.VITE_BROKER_PORT}`),
         clientId: generateRandomClientId(),
+        username: `${import.meta.env.VITE_BROKER_USERNAME}`,
+        password: `${import.meta.env.VITE_BROKER_PASSWORD}`,
     };
 
     const subsTopics = [
