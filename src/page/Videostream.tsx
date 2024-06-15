@@ -106,10 +106,7 @@ const Videostream = () => {
                     const blobObj = new Blob([message], { type: 'image/jpeg' }); 
                     setImageBlobDet(blobObj);
 
-                    (async () => {
-                        const base64Image = await blobToBase64(blobObj);
-                        setImageBlobDetBase64(base64Image);
-                    })();
+                    setImageBlobDetBase64(message.toString('base64'));
 
                     break;
 
