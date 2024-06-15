@@ -24,10 +24,19 @@ const Videostream = () => {
 
     const options = {
         protocol: 'mqtt',
-        host: '192.168.1.109',
-        port: 9001,
+        host: `${import.meta.env.VITE_BROKER_HOST}`,
+        port: parseInt(`${import.meta.env.VITE_BROKER_PORT}`),
         clientId: generateRandomClientId(),
     };
+
+    const subsTopics = [
+        '/explorobot/ir',
+        '/explorobot/temperature',
+        '/explorobot/humidity',
+        '/explorobot/gas',
+        'streaming/send',
+        'streaming/receive'
+    ];
 
     useEffect(() => {
         if (explorationName === null) {
@@ -54,8 +63,6 @@ const Videostream = () => {
 
         client.current.on('connect', () => {
             console.log('Connected');
-
-            subscribeToAllTopics();
         });
 
         client.current.on('error', (err: Error | mqtt.ErrorWithReasonCode) => {
@@ -141,7 +148,7 @@ const Videostream = () => {
         return () => {
             clearInterval(intervalId);
         }
-      }, []);
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -190,13 +197,10 @@ const Videostream = () => {
         if (client.current === null || client.current.disconnected) {
             return;
         }
-        if (message="s") {
-            setImageBlob(null)
-        }
+
         client.current.publish('streaming/control', message, (error?: Error) => {
             if (error) {
-              console.log('Publish error: ', error);
-              return;
+                alert(`Publish 'streaming/control' error`);
             }
         });
     }
@@ -206,57 +210,36 @@ const Videostream = () => {
             return;
         }
 
-        client.current.subscribe('/explorobot/ir', (err: Error | null) => {
-            if (err) {
-                console.error(`Error on subscribing '/explorobot/ir' topic`, err);
-
-                return;
-            }
-        });
-
-        client.current.subscribe('/explorobot/temperature', (err: Error | null) => {
-            if (err) {
-                console.error(`Error on subscribing '/explorobot/temperature' topic`, err);
-                
-                return;
-            }
-        });
-
-        client.current.subscribe('/explorobot/humidity', (err: Error | null) => {
-            if (err) {
-                console.error(`Error on subscribing '/explorobot/humidity' topic`, err);
-                
-                return;
-            }
-        });
-
-        client.current.subscribe('/explorobot/gas', (err: Error | null) => {
-            if (err) {
-                console.error(`Error on subscribing "/explorobot/gas" topic`, err);
-                
-                return;
-            }
-        });
-
-        client.current.subscribe('streaming/send', (err: Error | null) => {
-            if (err) {
-                console.error(`Error on subscribing "streaming/send" topic`, err);
-                
-                return;
-            }
-        });
-
-        client.current.subscribe('streaming/receive', (err: Error | null) => {
-            if (err) {
-                console.error(`Error on subscribing "streaming/receive" topic`, err);
-                
-                return;
-            }
+        subsTopics.forEach(topic => {
+            client.current!.subscribe(topic, (err: Error | null) => {
+                if (err) {
+                    alert(`Error on subscribing '${topic}' topic. The page will be reloaded.`);
+                    window.location.reload();
+                }
+            });
         });
     }
 
+    const unsubscribeFromAllTopics = () => {
+        if (client.current === null || client.current.disconnected) {
+            return;
+        }
+    
+        subsTopics.forEach(topic => {
+            client.current!.unsubscribe(topic, (err?: Error) => {
+                if (err) {
+                    alert(`Error on unsubscribing '${topic}' topic. The page will be reloaded.`);
+                    window.location.reload();
+                }
+            });
+        });
+    };
+
     const handleStartClick = () => {
         setShowModal(true);
+
+        subscribeToAllTopics();
+        sendMessage("p");
     };
 
     const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -267,13 +250,14 @@ const Videostream = () => {
         setExplorationName(inputName);
         
         setShowModal(false);
-
-        sendMessage("p");
     };
 
     const handleStopClick = () => {
         sendMessage("s");
+        unsubscribeFromAllTopics();
+
         setImageBlob(null);
+        setImageBlobDet(null);
     };
 
     const publishControlTopic = (keyInput: 'forward' | 'backward' | 'left' | 'right' | 'stop') => {
@@ -283,9 +267,7 @@ const Videostream = () => {
 
         client.current.publish('/explorobot/control', keyInput, (error?: Error) => {
             if (error) {
-              console.log('Publish error: ', error);
-
-              return;
+                alert(`Publish '/explorobot/control' error`);
             }
         });
     }

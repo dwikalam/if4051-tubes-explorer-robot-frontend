@@ -5,7 +5,7 @@ export class StreamRepository extends HttpClient {
     private static repoInstance?: StreamRepository;
 
     private constructor() {
-        super(`${import.meta.env.VITE_SERVER_URL}/image`);
+        super(`${import.meta.env.VITE_BE_SERVER_URL}/image`);
     }
 
     public static getInstance() {

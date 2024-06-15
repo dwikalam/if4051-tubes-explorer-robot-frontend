@@ -5,7 +5,7 @@ export class ExplorationRepository extends HttpClient {
     private static repoInstance?: ExplorationRepository;
 
     private constructor() {
-        super(`${import.meta.env.VITE_SERVER_URL}/exploration`);
+        super(`${import.meta.env.VITE_BE_SERVER_URL}/exploration`);
     }
 
     public static getInstance() {

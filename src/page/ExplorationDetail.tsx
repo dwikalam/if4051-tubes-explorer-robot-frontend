@@ -10,9 +10,6 @@ const ExplorationDetail = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const explorationName = queryParams.get('name');
 
-    console.log(id);
-    console.log(explorationName);
-
     const [allObjectDetections, setAllObjectDetections] = useState<IGetObjectDetectionByIdRetDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
