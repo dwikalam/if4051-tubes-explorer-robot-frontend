@@ -149,7 +149,7 @@ const Videostream = () => {
         return () => {
             clearInterval(intervalId);
         }
-    }, []);
+    }, [explorationId]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
