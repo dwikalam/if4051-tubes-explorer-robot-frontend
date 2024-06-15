@@ -140,8 +140,7 @@ const Videostream = () => {
                     setOldImageBlobDetBase64(postObjectDetectionArg.image_blob);
                 })
                 .catch((err) => {
-                    alert("Object detection was failed to be posted. The page will be reloaded.");
-                    window.location.reload();
+                    alert("Object detection was failed to be posted.");
                 });
         }, 10000); // in ms
     
