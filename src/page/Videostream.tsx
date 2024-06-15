@@ -30,12 +30,12 @@ const Videostream = () => {
     };
 
     const subsTopics = [
-        '/explorobot/ir',
-        '/explorobot/temperature',
-        '/explorobot/humidity',
-        '/explorobot/gas',
-        'streaming/send',
-        'streaming/receive'
+        `${import.meta.env.VITE_IR_TOPIC}`,
+        `${import.meta.env.VITE_TEMP_TOPIC}`,
+        `${import.meta.env.VITE_HUMID_TOPIC}`,
+        `${import.meta.env.VITE_GAS_TOPIC}`,
+        `${import.meta.env.VITE_STREAM_SEND_TOPIC}`,
+        `${import.meta.env.VITE_STREAM_RECEIVE_TOPIC}`,
     ];
 
     useEffect(() => {
@@ -79,28 +79,28 @@ const Videostream = () => {
             const messageStr = message.toString();
 
             switch (topic) {
-                case '/explorobot/ir':
+                case `${import.meta.env.VITE_IR_TOPIC}`:
                     setIrValue(messageStr);
                     break;
 
-                case '/explorobot/temperature':
+                case `${import.meta.env.VITE_TEMP_TOPIC}`:
                     setTempValue(messageStr);
                     break;
 
-                case '/explorobot/humidity':
+                case `${import.meta.env.VITE_HUMID_TOPIC}`:
                     setHumidValue(messageStr);
                     break;
 
-                case '/explorobot/gas':
+                case `${import.meta.env.VITE_GAS_TOPIC}`:
                     setGasValue(messageStr);
                     break;
                 
-                case 'streaming/send':
+                case `${import.meta.env.VITE_STREAM_SEND_TOPIC}`:
                     const blob = new Blob([message], { type: 'image/jpeg' }); 
                     setImageBlob(blob);
                     break;
 
-                case 'streaming/receive':
+                case `${import.meta.env.VITE_STREAM_RECEIVE_TOPIC}`:
                     const blobObj = new Blob([message], { type: 'image/jpeg' }); 
                     setImageBlobDet(blobObj);
 
@@ -198,9 +198,9 @@ const Videostream = () => {
             return;
         }
 
-        client.current.publish('streaming/control', message, (error?: Error) => {
+        client.current.publish(`${import.meta.env.VITE_STREAM_CONTROL_TOPIC}`, message, (error?: Error) => {
             if (error) {
-                alert(`Publish 'streaming/control' error`);
+                alert(`Publish stream control error`);
             }
         });
     }
@@ -265,9 +265,9 @@ const Videostream = () => {
             return;
         }
 
-        client.current.publish('/explorobot/control', keyInput, (error?: Error) => {
+        client.current.publish(`${import.meta.env.VITE_ROBOT_CONTROL_TOPIC}`, keyInput, (error?: Error) => {
             if (error) {
-                alert(`Publish '/explorobot/control' error`);
+                alert(`Publish robot control error`);
             }
         });
     }
