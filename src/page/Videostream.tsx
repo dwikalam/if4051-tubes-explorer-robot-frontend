@@ -7,12 +7,12 @@ import { Button, Form, Modal } from 'react-bootstrap';
 
 const Videostream = () => {
     const [explorationName, setExplorationName] = useState<string|null>(null);
-    const [explorationId, setExplorationId] = useState<string|null>(null);
+    const explorationId = useRef<string|null>(null);
 
     const [imageBlob, setImageBlob] = useState<any|null>(null);
     const [imageBlobDet, setImageBlobDet] = useState<any|null>(null); // Image Blob for object detection
-    const [imageBlobDetBase64, setImageBlobDetBase64] = useState<any|null>(null); // Image Blob for object detection
-    const [oldImageBlobDetBase64, setOldImageBlobDetBase64] = useState<any|null>(null); 
+    const imageBlobDetBase64 = useRef<any|null>(null); // Image Blob for object detection
+    const oldImageBlobDetBase64 = useRef<any|null>(null); 
 
     const client = useRef<MqttClient | null>(null);
     const [irValue, setIrValue] = useState<string | null>(null);
@@ -52,7 +52,7 @@ const Videostream = () => {
         ExplorationRepository.getInstance()
             .createExploration(createExplorationArg)
             .then((res) => {
-                setExplorationId(res.explorationId);
+                explorationId.current = res.explorationId;
             })
             .catch((err) => {
                 alert("Exploration failed to be created. The page will be reloaded.");
@@ -106,7 +106,7 @@ const Videostream = () => {
                     const blobObj = new Blob([message], { type: 'image/jpeg' }); 
                     setImageBlobDet(blobObj);
 
-                    setImageBlobDetBase64(message.toString('base64'));
+                    imageBlobDetBase64.current = message.toString('base64');
 
                     break;
 
@@ -122,13 +122,13 @@ const Videostream = () => {
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (explorationId === null || imageBlobDetBase64 === oldImageBlobDetBase64) {
+            if (explorationId.current === null || imageBlobDetBase64.current === oldImageBlobDetBase64.current) {
                 return;
             }
 
             const postObjectDetectionArg: IPostObjectDetectionArgDto = {
-                exploration_id: explorationId,
-                image_blob: imageBlobDetBase64,
+                exploration_id: explorationId.current,
+                image_blob: imageBlobDetBase64.current,
             }
 
             StreamRepository.getInstance()
@@ -136,7 +136,7 @@ const Videostream = () => {
                 .then(() => {
                     console.log(`Object detection was successfully posted.`);
 
-                    setOldImageBlobDetBase64(postObjectDetectionArg.image_blob);
+                    oldImageBlobDetBase64.current = postObjectDetectionArg.image_blob;
                 })
                 .catch((err) => {
                     alert("Object detection was failed to be posted.");
@@ -146,7 +146,7 @@ const Videostream = () => {
         return () => {
             clearInterval(intervalId);
         }
-    }, [explorationId]);
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
